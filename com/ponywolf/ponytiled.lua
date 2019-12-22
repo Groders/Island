@@ -380,6 +380,24 @@ function M.new(data, dir)
     end
   end
 
+  function map:insertObject( x, y, layerName )
+    layer = self:findLayer( layerName )
+    return display.newRect( layer, x, y, 200, 100 )
+  end
+
+  function map:extendObject( object, extension )
+    -- Load module
+    print(self.extensions)
+    print(extension)
+
+    local plugin = require ( (self.extensions or "") .. extension )
+
+    if object then 
+      -- Extend the display object with its own custom code
+      object = plugin.new( object )
+    end  
+  end
+
 -- return first display object with name
   function map:findObject(name)
     for layers = self.numChildren,1,-1 do
