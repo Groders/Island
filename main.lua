@@ -6,7 +6,7 @@
 
 local tiled = require "com.ponywolf.ponytiled"
 
-local mapData = require "assets.map" -- load from lua export
+local mapData = require "assets.map_v1" -- load from lua export
 
 local map = tiled.new( mapData, "assets" )
 
