@@ -104,7 +104,7 @@ function M.new(data, dir)
           x = (i-1)*(w + spacing) + margin,
           y = (j-1)*(h + spacing) + margin,
           width = w,
-          height = h
+          height = h,
         }
         frames[#frames + 1] = element
       end
