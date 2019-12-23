@@ -95,8 +95,8 @@ function M.new(data, dir)
     }
 
     local frames = options.frames
-    local tsh = tileset.tilecount / tileset.columns 
-    local tsw = tileset.columns 
+    local tsh = tileset.tilecount / tileset.columns
+    local tsw = tileset.columns
 
     for j=1, tsh do
       for i=1, tsw do
@@ -104,8 +104,9 @@ function M.new(data, dir)
           x = (i-1)*(w + spacing) + margin,
           y = (j-1)*(h + spacing) + margin,
           width = w,
-          height = h,
+          height = h,q
         }
+        print(element.x, element.y, element.width, element.height, h, q)
         frames[#frames + 1] = element
       end
     end
@@ -188,7 +189,7 @@ function M.new(data, dir)
   for i = 1, #layers do
     local layer = layers[i]
     layer.properties = layer.properties or {} -- make sure we have a properties table
-    local objectGroup = display.newGroup()    
+    local objectGroup = display.newGroup()
     if layer.type == "tilelayer" then
       if layer.compression or layer.encoding then
         print ("ERROR: Tile layer encoding/compression not supported. Choose CSV or XML in map options.")
