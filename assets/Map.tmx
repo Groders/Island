@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.3.1" orientation="orthogonal" renderorder="right-down" compressionlevel="-1" width="25" height="25" tilewidth="8" tileheight="8" infinite="0" nextlayerid="4" nextobjectid="1">
+<map version="1.2" tiledversion="1.3.1" orientation="orthogonal" renderorder="right-down" compressionlevel="0" width="25" height="25" tilewidth="8" tileheight="8" infinite="0" nextlayerid="5" nextobjectid="6">
  <editorsettings>
-  <export target="Map.lua" format="lua"/>
+  <export target="map_v1.lua" format="lua"/>
  </editorsettings>
  <tileset firstgid="1" source="tiles_v1.tsx"/>
  <layer id="1" name="Tile Layer 1" width="25" height="25">
@@ -33,6 +33,7 @@
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 </data>
  </layer>
+ <objectgroup id="4" name="fisherman" visible="0"/>
  <layer id="3" name="Farms" width="25" height="25">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
