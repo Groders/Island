@@ -85,8 +85,8 @@ local goldText
 local map
 
 -- updates players gold count to the new provided amount, and updates UI
-local function updateGold(newGold)
-    playerGold = newGold
+local function updateGold(increment)
+    playerGold = playerGold + increment
     goldText.text = "Gold: " .. playerGold
     if playerGold < math.pow(2, tablelength(playerHouses)) then
         buyHouseButton:setEnabled(false)
@@ -103,9 +103,9 @@ local function buyHouse(event)
         playerHouses[houseToBuy] = true
         local house = map:findObject(houseToBuy)
         house.isVisible = true
-        function house:tap() updateGold(playerGold + 1) end
+        function house:tap() updateGold(1) end
         house:addEventListener("tap")
-        updateGold(playerGold - math.pow(2, tablelength(playerHouses)))
+        updateGold(-math.pow(2, tablelength(playerHouses)))
     end
 end
 
@@ -132,6 +132,27 @@ map = tiled.new(mapData, "assets")
 
 map.x, map.y = display.contentCenterX - map.designedWidth / 2,
                display.contentCenterY - map.designedHeight / 2
+
+-- local physics = require ("physics")
+-- physics.start()
+-- physics.addBody(mapData, "static")
+
+local myBlueFish = display.newImage("assets/fish.png")
+local fishBlop = audio.loadSound("assets/blop.m4a")
+myBlueFish:scale(0.08, 0.08)
+myBlueFish.x = 275
+myBlueFish.y = 235
+
+function myBlueFish:tap()
+    -- #TODO: check out of bounds
+    transition.to(myBlueFish, {
+        x = math.random(0, display.actualContentWidth - 50),
+        y = math.random(0, display.actualContentHeight)
+    })
+    audio.play(fishBlop)
+end
+
+myBlueFish:addEventListener("tap")
 
 local dragable = require "com.ponywolf.plugins.dragable"
 map = dragable.new(map)
@@ -172,13 +193,13 @@ house1.y = map:findObject("house1").y - 1
 house1.isVisible = true
 function house1:tap()
     print("Gold +1")
-    updateGold(playerGold + 1)
+    updateGold(1)
 end
 house1:addEventListener("tap")
 availableHouses["house1"] = nil
 playerHouses["house1"] = true
 
-local function listener(event) updateGold(playerGold + tablelength(playerHouses)) end
+local function listener(event) updateGold(tablelength(playerHouses)) end
 
 -- Starting idle counter
 timer.performWithDelay(1000, listener, 0)
