@@ -95,8 +95,8 @@ function M.new(data, dir)
     }
 
     local frames = options.frames
-    local tsh = tileset.tilecount / tileset.columns 
-    local tsw = tileset.columns 
+    local tsh = tileset.tilecount / tileset.columns
+    local tsw = tileset.columns
 
     for j=1, tsh do
       for i=1, tsw do
@@ -188,7 +188,7 @@ function M.new(data, dir)
   for i = 1, #layers do
     local layer = layers[i]
     layer.properties = layer.properties or {} -- make sure we have a properties table
-    local objectGroup = display.newGroup()    
+    local objectGroup = display.newGroup()
     if layer.type == "tilelayer" then
       if layer.compression or layer.encoding then
         print ("ERROR: Tile layer encoding/compression not supported. Choose CSV or XML in map options.")
@@ -378,6 +378,24 @@ function M.new(data, dir)
         end
       end  
     end
+  end
+
+  function map:insertObject( x, y, layerName )
+    layer = self:findLayer( layerName )
+    return display.newRect( layer, x, y, 200, 100 )
+  end
+
+  function map:extendObject( object, extension )
+    -- Load module
+    print(self.extensions)
+    print(extension)
+
+    local plugin = require ( (self.extensions or "") .. extension )
+
+    if object then 
+      -- Extend the display object with its own custom code
+      object = plugin.new( object )
+    end  
   end
 
 -- return first display object with name
