@@ -3,6 +3,9 @@
 -- main.lua
 --
 -----------------------------------------------------------------------------------------
+require "ssk2.loadSSK"
+_G.ssk.init({debugLevel = 2})
+
 -- returns length of table
 function tablelength(T)
     local count = 0
@@ -29,32 +32,21 @@ local function increment(o)
     end
 end
 
--- deep tostring that can be used for any object type
-local function dump(o)
-    if type(o) == 'table' then
-        local s = '{ '
-        for k, v in pairs(o) do
-            if type(k) ~= 'number' then k = '"' .. k .. '"' end
-            s = s .. '[' .. k .. '] = ' .. dump(v) .. ','
-        end
-        return s .. '} '
-    else
-        return tostring(o)
-    end
-end
-
 math.randomseed(os.time())
+
+io.output():setvbuf("no") -- Don't use buffer for console messages
+display.setStatusBar(display.HiddenStatusBar) -- Hide that pesky bar
+local scoring = require "score"
 local tiled = require "com.ponywolf.ponytiled"
+local fx = require "com.ponywolf.ponyfx"
 local tmp = require "loadedObj"
 local widget = require("widget")
+local upgradePane = (require "upgradePane").new()
 
 local json = require("json")
 local path =
     system.pathForFile("assets/Map_temp.json", system.ResourceDirectory)
 local mapData = json.decodeFile(path)
-
--- holds player gold count
-local playerGold = 0
 
 -- array holding all the player owned houses
 -- #TODO: houses??? Probably should be changed to fishing huts etc
@@ -78,20 +70,21 @@ local availableHouses = {
     house13 = true
 }
 
+-- hack, see method comment
 increment(mapData.layers)
 
 local buyHouseButton
-local goldText
+local score
 local map
 
 -- updates players gold count to the new provided amount, and updates UI
-local function updateGold(newGold)
-    playerGold = newGold
-    goldText.text = "Gold: " .. playerGold
-    if playerGold < math.pow(2, tablelength(playerHouses)) then
-        buyHouseButton:setEnabled(false)
+local function updateGold(increment)
+    score:add(increment)
+    -- print("Increment:", increment, "Gold count:", score:get())
+    if score:get() < math.pow(2, tablelength(playerHouses)) then
+        buyHouseButton:disable(0.5)
     else
-        buyHouseButton:setEnabled(true)
+        buyHouseButton:enable()
     end
 end
 
@@ -100,33 +93,21 @@ local function buyHouse(event)
     if ("ended" == event.phase) then
         local houseToBuy = math.randomchoice(availableHouses)
         availableHouses[houseToBuy] = nil
-        playerHouses[houseToBuy] = true
+        playerHouses[houseToBuy] = {level = 1}
         local house = map:findObject(houseToBuy)
         house.isVisible = true
-        function house:tap() updateGold(playerGold + 1) end
+        fx.breath(house, 0.10, 750)
+        function house:tap() updateGold(1) end
         house:addEventListener("tap")
-        updateGold(playerGold - math.pow(2, tablelength(playerHouses)))
+        updateGold(-math.pow(2, tablelength(playerHouses) - 1))
     end
 end
 
 -- create button to buy a house
-buyHouseButton = widget.newButton({
-    label = "button",
-    emboss = false,
-    onEvent = buyHouse,
-    shape = "roundedRect",
-    width = 100,
-    height = 40,
-    cornerRadius = 2,
-    fillColor = {default = {1, 0, 0, 1}, over = {1, 0.1, 0.7, 0.4}},
-    strokeColor = {default = {1, 0.4, 0, 1}, over = {0.8, 0.8, 1, 1}},
-    strokeWidth = 4
-})
-
-buyHouseButton.x = display.contentCenterX + 200
-buyHouseButton.y = display.contentCenterY
-
-buyHouseButton:setLabel("Buy House")
+buyHouseButton = ssk.easyIFC:presetPush(group, "default",
+                                        display.contentCenterX + 200,
+                                        display.contentCenterY, 100, 40,
+                                        "Buy House", buyHouse)
 
 map = tiled.new(mapData, "assets")
 
@@ -136,49 +117,38 @@ map.x, map.y = display.contentCenterX - map.designedWidth / 2,
 local dragable = require "com.ponywolf.plugins.dragable"
 map = dragable.new(map)
 
-local goldRect = display.newRect(400, 50, 200, 100)
-goldRect:setFillColor(0, 0, 0, 0)
+-- Add our scoring module
+local gem = display.newImageRect("assets/gem.png", 64, 64)
+gem.x = display.contentWidth - gem.contentWidth / 2 - 24
+gem.y = display.screenOriginY + gem.contentHeight / 2 + 20
 
-goldText = display.newText("Gold: " .. playerGold, goldRect.x, goldRect.y,
-                           native.newFont(), 30)
-
-local sx = goldRect.contentWidth / goldText.contentWidth
-local sy = goldRect.contentHeight / goldText.contentHeight
-local scale = (sx < sy) and sx or sy
-
-goldText:scale(scale, scale)
-
--- test seaching for objects
-TestOjb = map:findObject("Test")
-TestOjb:toFront()
-TestOjb:rotate(20)
-print(TestOjb.isVisible)
-
-local function listener(event)
-    TestOjb.isVisible = true
-    print(TestOjb.isVisible)
-end
-
-timer1 = timer.performWithDelay(200, listener) -- wait 2 seconds
-
-print(TestOjb.isVisible)
-
---  test adding/duplicating objects
-local object = map:insertObject(TestOjb.x + 30, TestOjb.y, 'Test')
-map:extendObject(object, 'loadedObj')
+score = scoring.new({score = 20})
+score.x = display.contentWidth - score.contentWidth / 2 - 32 - gem.width
+score.y = display.screenOriginY + score.contentHeight / 2 + 16
 
 local house1 = map:findObject("house1")
 house1.y = map:findObject("house1").y - 1
 house1.isVisible = true
-function house1:tap()
-    print("Gold +1")
-    updateGold(playerGold + 1)
-end
+fx.breath(house1, 0.10, 750)
+function house1:tap() updateGold(1) end
 house1:addEventListener("tap")
 availableHouses["house1"] = nil
-playerHouses["house1"] = true
+playerHouses["house1"] = {level = 1}
 
-local function listener(event) updateGold(playerGold + tablelength(playerHouses)) end
+local function listener(event) updateGold(tablelength(playerHouses)) end
 
 -- Starting idle counter
 timer.performWithDelay(1000, listener, 0)
+
+local function displayUpgrades(event)
+    upgradePane:showDialogTray(playerHouses, score)
+end
+
+ssk.easyIFC:presetPush(group, "default", display.contentCenterX + 200,
+                       display.contentCenterY + 60, 120, 40, "Upgrade Houses",
+                       displayUpgrades)
+
+-- #TODO: put progress bar on top of houses
+-- local progressView = widget.newProgressView(
+--                      {left = 50, top = 200, width = 220, isAnimated = true})
+-- progressView:setProgress(0.5)
